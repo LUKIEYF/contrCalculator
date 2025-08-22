@@ -41,14 +41,14 @@ public class MPFCalculatorTest {
 
         // month config
         monthConfig = new MPFDateCalculatorConfig()
-                .setDateOfEmployment(LocalDate.of(2025, 1, 1))
+                .setDateOfEmployment(LocalDate.of(2025, 1, 5))
                 .setDateOfBirth(LocalDate.of(1990, 5, 20))
-                .setMorePeriod(OptionalLong.of(1)) // the period needed after exemption
+                .setMorePeriod(OptionalLong.of(3)) // the period needed after exemption
                 .setEndOfEmployment(LocalDate.of(2025, 4, 15))
         ;
 
         nonCalendarMonthConfig = new MPFDateCalculatorConfig()
-                .setDateOfEmployment(LocalDate.of(2025, 1, 2))
+                .setDateOfEmployment(LocalDate.of(2025, 1, 5))
                 .setDateOfBirth(LocalDate.of(1990, 5, 20))
                 .setMorePeriod(OptionalLong.of(3))
                 .setEndOfEmployment(LocalDate.of(2025, 4, 15))
@@ -185,7 +185,7 @@ public class MPFCalculatorTest {
 
             // fake data
             BigDecimal[] salaries = new BigDecimal[salariesSize];
-            Arrays.fill(salaries,new BigDecimal("9999"));
+            Arrays.fill(salaries,new BigDecimal("99999"));
 
             // cal the amount
             amtCctr.calculateAmount(CalUserType.EMPLOYEE, salaries);
@@ -214,7 +214,7 @@ public class MPFCalculatorTest {
 
             // fake data
             BigDecimal[] salaries = new BigDecimal[salariesSize];
-            Arrays.fill(salaries,new BigDecimal("9999"));
+            Arrays.fill(salaries,new BigDecimal("99999"));
 
             // cal the amount
             amtCctr.calculateAmount(CalUserType.EMPLOYEE, salaries);

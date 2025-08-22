@@ -1,5 +1,6 @@
 package org.example.util.logic;
 
+import org.example.dto.ContributionPeriodMore;
 import org.example.util.intf.ContributionPeriodMiddleware;
 
 import java.util.ArrayList;
@@ -80,13 +81,13 @@ public class MiddlewareRegistry {
      * 
      * @return a function that applies all registered middlewares in sequence
      */
-    public Function<org.example.dto.ContributionPeriodMore, org.example.dto.ContributionPeriodMore> createPipeline() {
+    public Function<ContributionPeriodMore, ContributionPeriodMore> createPipeline() {
         if (middlewares.isEmpty()) {
             return Function.identity();
         }
         
         return contributionPeriod -> {
-            org.example.dto.ContributionPeriodMore result = contributionPeriod;
+            ContributionPeriodMore result = contributionPeriod;
             for (ContributionPeriodMiddleware middleware : middlewares) {
                 result = middleware.process(result);
             }
