@@ -2,14 +2,13 @@ package org.example.util.logic;
 
 import org.example.dto.ContributionPeriod;
 import org.example.dto.ContributionPeriodMore;
-import org.example.enums.WeeklyCycle;
+import org.example.util.intf.ContributionPeriodMiddleware;
 import org.example.util.intf.MPFPayrollDateCalLogic;
 import org.example.util.intf.MPFPayrollLogger;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.OptionalLong;
-import java.util.function.Function;
 
 /***
  * common calculation logic and perform as a proxy class
@@ -19,8 +18,16 @@ public abstract class MPFPayrollDateCalculatorLogic extends MPFPayrollDateCalcul
     // need more period after the deadline of enrollment
     protected OptionalLong morePeriod = OptionalLong.empty();
 
+    // the employee has 30 days in exemption for contribution payment.
+    protected LocalDate deadlineFor30Exemption;
+    
+    // Middleware registry for processing contribution periods
+    protected final MiddlewareRegistry middlewareRegistry;
+
     public MPFPayrollDateCalculatorLogic(List<LocalDate> publicHolidays) {
         super(publicHolidays);
+        this.middlewareRegistry = new MiddlewareRegistry();
+        initializeMiddlewares();
     }
 
     public MPFPayrollDateCalculatorLogic setMorePeriod(OptionalLong morePeriod) {
@@ -33,6 +40,35 @@ public abstract class MPFPayrollDateCalculatorLogic extends MPFPayrollDateCalcul
             throw new IllegalArgumentException("morePeriod must be a positive number (0,30)");
         }
         return this;
+    }
+
+    /**
+     * Get the deadline for 30-day exemption with lazy initialization
+     */
+    @Override
+    public LocalDate getDeadlineFor30Exemption() {
+        if (deadlineFor30Exemption == null && dateOfEmployment != null) {
+            deadlineFor30Exemption = getThe31stDOE();
+        }
+        return deadlineFor30Exemption;
+    }
+
+    /**
+     * Get the deadline of enrollment with lazy initialization
+     * @return deadline of enrollment
+     */
+    @Override
+    public LocalDate getDeadlineForEnrol() {
+        if (deadlineForEnrol == null && dateOfEmployment != null) {
+            boolean isEighteenOrOlder = !dateOfBirth.isAfter(LocalDate.now().minusYears(18));
+            if (!isEighteenOrOlder) {
+                return dateUtils.getDateAfterPublicHolidayAndWeekend(
+                        dateUtils.getLargerDate(dateOfBirth.plusYears(18), getThe60thDOE())
+                );
+            }
+            return dateUtils.getDateAfterPublicHolidayAndWeekend(getThe60thDOE());
+        }
+        return deadlineForEnrol;
     }
 
     public ContributionPeriodMore calculate() throws Exception {
@@ -48,70 +84,75 @@ public abstract class MPFPayrollDateCalculatorLogic extends MPFPayrollDateCalcul
 
     // ==================== middleware =================================
 
-    private ContributionPeriodMore applyMiddleware(ContributionPeriodMore c){
-        return createMiddlewarePipeline().apply(c);
+    /**
+     * Initialize default middlewares. Subclasses can override to add custom middlewares.
+     */
+    protected void initializeMiddlewares() {
+        // Register the period rectification middleware
+        middlewareRegistry.register(createPeriodRectificationMiddleware());
     }
 
     /**
-     * Create the middleware pipeline
+     * Create the period rectification middleware.
+     * Can be overridden by subclasses for custom rectification logic.
      */
-    private Function<ContributionPeriodMore, ContributionPeriodMore> createMiddlewarePipeline() {
-        return Function.<ContributionPeriodMore>identity()
-                .andThen(this::rectifyPeriodMiddleware);
+    protected ContributionPeriodMiddleware createPeriodRectificationMiddleware() {
+        return new PeriodRectificationMiddleware(endOfEmployment, this::calTheLastPeriod);
     }
 
-    /***
-     * check the period is between the period or not
-     * @param c the contribution period before and after exemption date
-     * @return the contribution period before and after exemption date
+    /**
+     * Apply all registered middlewares to the contribution period.
      */
-    private ContributionPeriodMore rectifyPeriodMiddleware(ContributionPeriodMore c){
-        if (endOfEmployment != null){
-            List<ContributionPeriod> m = c.getPeriodMore();
-            if (!m.isEmpty()){
-                c.setPeriodMore(rectifyPeriod(m,m.size() - 1)); // recursive
-            }
-        }
-        return c;
+    private ContributionPeriodMore applyMiddleware(ContributionPeriodMore c) {
+        return middlewareRegistry.createPipeline().apply(c);
     }
 
-    private List<ContributionPeriod> rectifyPeriod(List<ContributionPeriod> cs, int i){
-        if (i < 0){
-            return cs;
-        } else if (
-                i >= cs.size() || // reversely iterate
-                (
-                        cs.get(i).getStartDate().isBefore(endOfEmployment) && // means the end of employment date between [start,end]
-                                cs.get(i).getEndDate().isAfter(endOfEmployment)
-                )
-        ){
-            if(i >= 0){
-                cs = cs.subList(0, i); // cut the period if is not before the end of employment date
-            }
-            // add the last period
-            cs.add(calTheLastPeriod(endOfEmployment));
-            return cs;
-        }
+    /**
+     * Add a custom middleware to the processing pipeline.
+     * Middlewares are executed in the order they are added.
+     * 
+     * @param middleware the middleware to add
+     * @return this instance for method chaining
+     */
+    public MPFPayrollDateCalculatorLogic addMiddleware(ContributionPeriodMiddleware middleware) {
+        middlewareRegistry.register(middleware);
+        return this;
+    }
 
-        return rectifyPeriod(cs, i - 1);
+    /**
+     * Clear all middlewares and reinitialize with defaults.
+     * 
+     * @return this instance for method chaining
+     */
+    public MPFPayrollDateCalculatorLogic resetMiddlewares() {
+        middlewareRegistry.clear();
+        initializeMiddlewares();
+        return this;
+    }
+
+    /**
+     * Get the middleware registry for advanced middleware management.
+     * 
+     * @return the middleware registry
+     */
+    protected MiddlewareRegistry getMiddlewareRegistry() {
+        return middlewareRegistry;
     }
 
     // ==================== validate and supplement of data ============
+
+    /**
+     * valid birthday
+     * @throws Exception
+     */
     private void valDateOfBirth() throws Exception {
         if (dateOfBirth.isAfter(LocalDate.now())) {
             throw new Exception("the date of birth is invalid");
         }
     }
 
-    private void valDeadlineOfEnrol(){
-        if(deadlineForEnrol == null){
-            deadlineForEnrol = calDeadlineForEnrol();
-        }
-    }
-
     protected void validate() throws Exception {
         valDateOfBirth();
-        valDeadlineOfEnrol();
         validateCustomized();
     }
 

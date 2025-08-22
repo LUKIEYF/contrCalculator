@@ -37,7 +37,8 @@ public class MPFFortNightlyDateCalculation extends MPFPayrollDateCalculatorLogic
         List<ContributionPeriod> periods = new ArrayList<>();
         List<ContributionPeriod> morePeriods = new ArrayList<>();
         LocalDate currentStart = dateOfEmployment;
-        LocalDate adjustedFnightStart = fnightStartDate;
+        LocalDate adjustedFnightStart;
+        deadlineFor30Exemption = getDeadlineFor30Exemption();
         int periodIndex = 0;
 
         long breaker = morePeriod.isPresent()? morePeriod.getAsLong(): 0;
@@ -87,13 +88,13 @@ public class MPFFortNightlyDateCalculation extends MPFPayrollDateCalculatorLogic
                 periodStart = periodEnd.plusDays(1);
 
                 if (
-                        periodEnd.isAfter(deadlineForEnrol) ||
-                        periodEnd.equals(deadlineForEnrol)
+                        periodEnd.isAfter(deadlineFor30Exemption) ||
+                        periodEnd.equals(deadlineFor30Exemption)
                 ) {
                     // Handle final period if it extends beyond deadline
                     if (
-                            dateUtils.isPubHoliday(deadlineForEnrol) &&
-                                    dateUtils.isSameDate(periodEnd, deadlineForEnrol)
+                            dateUtils.isPubHoliday(deadlineFor30Exemption) &&
+                                    dateUtils.isSameDate(periodEnd, deadlineFor30Exemption)
                     ) {
                         LocalDate finalPeriodEnd = periodStart.plusDays(13);
                         periods.add(new ContributionPeriod(periodStart, finalPeriodEnd));

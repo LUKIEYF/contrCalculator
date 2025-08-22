@@ -43,7 +43,8 @@ public class MPFSemiMonDateCalculator extends MPFPayrollDateCalculatorLogic{
             }
         }
 
-        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, deadlineForEnrol);
+//        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, deadlineForEnrol);
+        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, getDeadlineFor30Exemption());
 
         // Set first period start date flag
         setThe1stPeriodStartDate(adjustedStart.getDayOfMonth() == 1 || adjustedStart.getDayOfMonth() == 16);
@@ -52,7 +53,6 @@ public class MPFSemiMonDateCalculator extends MPFPayrollDateCalculatorLogic{
             LocalDate periodEnd = getCycleEndForSemiMonth(adjustedStart);
 
             ContributionPeriod period = new ContributionPeriod(adjustedStart, periodEnd);
-            periods.add(period);
 
             // Check age 65 within this period
             setAge65WithinPeriod(adjustedStart, periodEnd);
@@ -63,7 +63,9 @@ public class MPFSemiMonDateCalculator extends MPFPayrollDateCalculatorLogic{
 
             // record the extract periods data
             if (morePeriodIndex < breaker &&
-                    totalDays >= totalDaysToDeadline) {
+                    totalDays >= totalDaysToDeadline &&
+                    !dateUtils.isBetween(getDeadlineFor30Exemption(), period.getStartDate(), period.getEndDate())
+            ) {
                 morePeriods.add(period); // employee non-pay period
                 morePeriodIndex++;
             }else{

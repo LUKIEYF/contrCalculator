@@ -1,7 +1,6 @@
 package org.example.util.logic;
 
-import org.example.enums.WeeklyCycle;
-
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.OptionalLong;
 
@@ -16,7 +15,7 @@ public class MPFDateCalculatorConfig {
     private OptionalLong morePeriod = OptionalLong.empty();
     
     // For weekly calculations
-    private WeeklyCycle weeklyCycle;
+    private DayOfWeek weeklyCycle;
     
     // For fortnightly calculations  
     private LocalDate pryllFnightStartDate;
@@ -78,11 +77,11 @@ public class MPFDateCalculatorConfig {
         return this;
     }
 
-    public WeeklyCycle getWeeklyCycle() {
+    public DayOfWeek getWeeklyCycle() {
         return weeklyCycle;
     }
 
-    public MPFDateCalculatorConfig setWeeklyCycle(WeeklyCycle weeklyCycle) {
+    public MPFDateCalculatorConfig setWeeklyCycle(DayOfWeek weeklyCycle) {
         this.weeklyCycle = weeklyCycle;
         return this;
     }

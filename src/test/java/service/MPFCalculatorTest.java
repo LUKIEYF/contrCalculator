@@ -1,10 +1,7 @@
 package service;
 
-
-import org.example.constant.MPFCalculatorConstants;
 import org.example.dto.ContributionPeriod;
 import org.example.dto.ContributionPeriodMore;
-import org.example.dto.MPFAmtResult;
 import org.example.enums.CalUserType;
 import org.example.enums.PayrollFrequency;
 import org.example.util.intf.MPFPayrollLogger;
@@ -13,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -32,24 +30,54 @@ public class MPFCalculatorTest {
     public void setUp(){
         // Sample public holidays
         publicHolidays = Arrays.asList(
-                LocalDate.of(2024, 1, 1),   // New Year's Day
-                LocalDate.of(2024, 2, 12),  // Chinese New Year
-                LocalDate.of(2024, 2, 13),  // Chinese New Year
-                LocalDate.of(2024, 3, 29),  // Good Friday
-                LocalDate.of(2024, 5, 1),   // Labour Day
-                LocalDate.of(2024, 5, 15),  // Buddha's Birthday
-                LocalDate.of(2024, 12, 25)  // Christmas Day
+                LocalDate.of(2025, 1, 1),   // New Year's Day
+                LocalDate.of(2025, 2, 12),  // Chinese New Year
+                LocalDate.of(2025, 2, 13),  // Chinese New Year
+                LocalDate.of(2025, 3, 29),  // Good Friday
+                LocalDate.of(2025, 5, 1),   // Labour Day
+                LocalDate.of(2025, 5, 15),  // Buddha's Birthday
+                LocalDate.of(2025, 12, 25)  // Christmas Day
         );
 
         // month config
         monthConfig = new MPFDateCalculatorConfig()
-                .setDateOfEmployment(LocalDate.of(2024, 1, 1))
+                .setDateOfEmployment(LocalDate.of(2025, 1, 1))
                 .setDateOfBirth(LocalDate.of(1990, 5, 20))
                 .setMorePeriod(OptionalLong.of(1)) // the period needed after exemption
-                .setEndOfEmployment(LocalDate.of(2024, 4, 15))
+                .setEndOfEmployment(LocalDate.of(2025, 4, 15))
         ;
 
-        // todo more configs
+        nonCalendarMonthConfig = new MPFDateCalculatorConfig()
+                .setDateOfEmployment(LocalDate.of(2025, 1, 2))
+                .setDateOfBirth(LocalDate.of(1990, 5, 20))
+                .setMorePeriod(OptionalLong.of(3))
+                .setEndOfEmployment(LocalDate.of(2025, 4, 15))
+                .setNonCalStartDay(4)
+        ;
+
+        semiMonthConfig = new MPFDateCalculatorConfig()
+                .setDateOfEmployment(LocalDate.of(2025, 1, 2))
+                .setDateOfBirth(LocalDate.of(1990, 5, 20))
+                .setMorePeriod(OptionalLong.of(3))
+                .setEndOfEmployment(LocalDate.of(2025, 4, 15))
+        ;
+
+        fortyNightConfig = new MPFDateCalculatorConfig()
+                .setDateOfEmployment(LocalDate.of(2025, 1, 2))
+                .setDateOfBirth(LocalDate.of(1990, 5, 20))
+                .setMorePeriod(OptionalLong.of(3))
+                .setEndOfEmployment(LocalDate.of(2025, 4, 15))
+                .setPryllFnightStartDate(LocalDate.of(2025, 1, 3))
+        ;
+
+        weeklyConfig = new MPFDateCalculatorConfig()
+                .setDateOfEmployment(LocalDate.of(2025, 1, 2))
+                .setDateOfBirth(LocalDate.of(1990, 5, 20))
+                .setMorePeriod(OptionalLong.of(3))
+                .setEndOfEmployment(LocalDate.of(2025, 4, 15))
+                .setWeeklyCycle(DayOfWeek.WEDNESDAY)
+        ;
+
     }
 
     private void MPFDateInfoLogAll(MPFPayrollDateCalculatorLogic calculator) {
@@ -106,9 +134,9 @@ public class MPFCalculatorTest {
         MPFMonDateCalculator calculator = new MPFMonDateCalculator(publicHolidays);
 
         // Set up employee details
-        LocalDate employmentDate = LocalDate.of(2024, 1, 1);
+        LocalDate employmentDate = LocalDate.of(2025, 1, 1);
         LocalDate birthDate = LocalDate.of(1990, 5, 20);
-//            LocalDate deadlineForEnrol = LocalDate.of(2024, 12, 31);
+//            LocalDate deadlineForEnrol = LocalDate.of(2025, 12, 31);
 
         calculator.setDateOfEmployment(employmentDate);
         calculator.setDateOfBirth(birthDate);
@@ -116,7 +144,7 @@ public class MPFCalculatorTest {
         calculator.setMorePeriod(OptionalLong.of(1));
 
         // set end of employment date
-        calculator.setEndOfEmployment(LocalDate.of(2024, 4, 15));
+        calculator.setEndOfEmployment(LocalDate.of(2025, 4, 15));
 
         MPFDateInfoLogAll(calculator);
     }
@@ -131,9 +159,9 @@ public class MPFCalculatorTest {
         MPFPayrollLogger mpfLog = calculator;
 
         // Set up employee details
-        LocalDate employmentDate = LocalDate.of(2024, 2, 1);
+        LocalDate employmentDate = LocalDate.of(2025, 2, 1);
         LocalDate birthDate = LocalDate.of(1990, 5, 20);
-//            LocalDate deadlineForEnrol = LocalDate.of(2024, 12, 31);
+//            LocalDate deadlineForEnrol = LocalDate.of(2025, 12, 31);
 
         calculator.setDateOfEmployment(employmentDate);
         calculator.setDateOfBirth(birthDate);
@@ -167,6 +195,120 @@ public class MPFCalculatorTest {
 
             System.out.println(amtCctr.getDateReport());
 
+        }catch (Exception e) {
+            System.out.println("error msg:" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testCalAmtNonMonth() {
+        try {
+            // new a monthly amount calculator
+            MPFAmtCalculator amtCctr = new MPFAmtCalculator(PayrollFrequency.NON_CALENDAR_MONTH, publicHolidays);
+
+            // config and then cal the date
+            ContributionPeriodMore contrPeriods = amtCctr.configure(nonCalendarMonthConfig).calculateDate();
+
+            int salariesSize = contrPeriods.getPeriod().size() + contrPeriods.getPeriodMore().size();
+
+            // fake data
+            BigDecimal[] salaries = new BigDecimal[salariesSize];
+            Arrays.fill(salaries,new BigDecimal("9999"));
+
+            // cal the amount
+            amtCctr.calculateAmount(CalUserType.EMPLOYEE, salaries);
+
+            // report
+            System.out.println(amtCctr.getAmtReport());
+
+            System.out.println(amtCctr.getDateReport());
+
+        }catch (Exception e) {
+            System.out.println("error msg:" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testCalAmtSemiMonth() {
+        try{
+            // new a monthly amount calculator
+            MPFAmtCalculator amtCctr = new MPFAmtCalculator(PayrollFrequency.SEMI_MONTHLY, publicHolidays);
+
+            // config and then cal the date
+            ContributionPeriodMore contrPeriods = amtCctr.configure(semiMonthConfig).calculateDate();
+
+            int salariesSize = contrPeriods.getPeriod().size() + contrPeriods.getPeriodMore().size();
+
+            // fake data
+            BigDecimal[] salaries = new BigDecimal[salariesSize];
+            Arrays.fill(salaries,new BigDecimal("9999"));
+
+            amtCctr.calculateAmount(CalUserType.EMPLOYEE, salaries);
+
+            System.out.println(amtCctr.getAmtReport());
+
+            System.out.println(amtCctr.getDateReport());
+
+        }catch (Exception e){
+            System.out.println("error msg:" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testCalAmtFortNightly(){
+        try {
+            // new a monthly amount calculator
+            MPFAmtCalculator amtCctr = new MPFAmtCalculator(PayrollFrequency.FORTNIGHTLY, publicHolidays);
+
+            // config and then cal the date
+            ContributionPeriodMore contrPeriods = amtCctr.configure(fortyNightConfig).calculateDate();
+
+            // salary size
+            int salariesSize = contrPeriods.getPeriod().size() + contrPeriods.getPeriodMore().size();
+
+            // fake data
+            BigDecimal[] salaries = new BigDecimal[salariesSize];
+            Arrays.fill(salaries,new BigDecimal("6999.99999999999999999999999999999999"));
+
+            // cal the amount
+            amtCctr.calculateAmount(CalUserType.EMPLOYEE, salaries);
+
+            // report
+            System.out.println(amtCctr.getAmtReport());
+
+            System.out.println(amtCctr.getDateReport());
+        }catch (Exception e) {
+            System.out.println("error msg:" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testCalAmtWeekly() {
+        try {
+            // new a monthly amount calculator
+            MPFAmtCalculator amtCctr = new MPFAmtCalculator(PayrollFrequency.WEEKLY, publicHolidays);
+
+            // config and then cal the date
+            ContributionPeriodMore contrPeriods = amtCctr.configure(weeklyConfig).calculateDate();
+
+            // salary size
+            int salariesSize = contrPeriods.getPeriod().size() + contrPeriods.getPeriodMore().size();
+
+            // fake data
+            BigDecimal[] salaries = new BigDecimal[salariesSize];
+            Arrays.fill(salaries,new BigDecimal("6999.99999999999999999999999999999999"));
+
+            // cal the amount
+            amtCctr.calculateAmount(CalUserType.EMPLOYEE, salaries);
+
+            // report
+            System.out.println(amtCctr.getAmtReport());
+
+            System.out.println(amtCctr.getDateReport());
         }catch (Exception e) {
             System.out.println("error msg:" + e.getMessage());
             e.printStackTrace();

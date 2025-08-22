@@ -73,36 +73,15 @@ public class DateUtils {
      * @param startDate starting date
      * @param dayOfWeek target day (0=Sunday, 1=Monday, ..., 6=Saturday)
      */
-    public LocalDate getCommingDateByDay(LocalDate startDate, int dayOfWeek) {
-        // Convert to Java DayOfWeek (1=Monday, 7=Sunday)
-        DayOfWeek targetDay = convertToJavaDayOfWeek(dayOfWeek);
-        
+    public LocalDate getCommingDateByDay(LocalDate startDate, DayOfWeek dayOfWeek) {
         LocalDate current = startDate;
         for (int i = 0; i < 8; i++) {
-            if (current.getDayOfWeek() == targetDay) {
+            if (current.getDayOfWeek() == dayOfWeek) {
                 return current;
             }
             current = current.plusDays(1);
         }
         return current;
-    }
-    
-    /**
-     * Convert JavaScript day numbering to Java DayOfWeek
-     * JS: 0=Sunday, 1=Monday, ..., 6=Saturday
-     * Java: 1=Monday, ..., 7=Sunday
-     */
-    private DayOfWeek convertToJavaDayOfWeek(int jsDay) {
-        return switch (jsDay) {
-            case 0 -> DayOfWeek.SUNDAY;
-            case 1 -> DayOfWeek.MONDAY;
-            case 2 -> DayOfWeek.TUESDAY;
-            case 3 -> DayOfWeek.WEDNESDAY;
-            case 4 -> DayOfWeek.THURSDAY;
-            case 5 -> DayOfWeek.FRIDAY;
-            case 6 -> DayOfWeek.SATURDAY;
-            default -> throw new IllegalArgumentException("Invalid day of week: " + jsDay);
-        };
     }
     
     /**
@@ -170,8 +149,9 @@ public class DateUtils {
     /**
      * Check if an age date falls within a period
      */
-    public boolean isAgeWithinPeriod(LocalDate ageDate, LocalDate periodStart, LocalDate periodEnd) {
+    public boolean isBetween(LocalDate ageDate, LocalDate periodStart, LocalDate periodEnd) {
         return (ageDate.equals(periodStart) || ageDate.equals(periodEnd) || 
                 (ageDate.isAfter(periodStart) && ageDate.isBefore(periodEnd)));
     }
+
 }

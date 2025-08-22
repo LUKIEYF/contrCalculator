@@ -47,7 +47,7 @@ public class MPFMonDateCalculator extends MPFPayrollDateCalculatorLogic{
             }
         }
 
-        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, deadlineForEnrol);
+        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, getDeadlineFor30Exemption());
 
         // Set first period start date flag
         setThe1stPeriodStartDate(adjustedStart.getDayOfMonth() == 1);
@@ -67,7 +67,9 @@ public class MPFMonDateCalculator extends MPFPayrollDateCalculatorLogic{
 
             // record the extract periods data
             if (morePeriodIndex < breaker &&
-                    totalDays >= totalDaysToDeadline) {
+                    totalDays >= totalDaysToDeadline &&
+                    !dateUtils.isBetween(getDeadlineFor30Exemption(), period.getStartDate(), period.getEndDate())
+            ){
                 morePeriods.add(period); // employee non-pay period
                 morePeriodIndex++;
             }else{
@@ -90,7 +92,7 @@ public class MPFMonDateCalculator extends MPFPayrollDateCalculatorLogic{
     /**
      * Get 18th age period start for calendar month
      */
-    protected LocalDate getThe18thAgePeriodsStartForCalMonth(LocalDate age18Date, LocalDate employmentDate) {
+    private LocalDate getThe18thAgePeriodsStartForCalMonth(LocalDate age18Date, LocalDate employmentDate) {
         LocalDate firstOfMonth = LocalDate.of(age18Date.getYear(), age18Date.getMonth(), 1);
         return employmentDate.isAfter(firstOfMonth) ? employmentDate : firstOfMonth;
     }
@@ -103,4 +105,5 @@ public class MPFMonDateCalculator extends MPFPayrollDateCalculatorLogic{
         LocalDate periodStart = LocalDate.of(lastDOE.getYear(), lastDOE.getMonth(), 1);
         return new ContributionPeriod(periodStart, lastDOE);
     }
+
 }

@@ -1,8 +1,6 @@
 package org.example.util.logic;
 
-import org.example.enums.WeeklyCycle;
 import org.example.util.intf.MPFPayrollDateCalculatorElements;
-import org.example.util.intf.MPFPayrollLogger;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +15,7 @@ abstract class MPFPayrollDateCalculatorBase implements MPFPayrollDateCalculatorE
     protected LocalDate dateOfEmployment;
     protected LocalDate dateOfBirth;
     protected LocalDate deadlineForEnrol;
+    protected LocalDate deadlineFor30Exemption;
     protected boolean isThe1stPeriodStartDate;
     protected boolean age65Within1stPeriod;
     protected LocalDate endOfEmployment;
@@ -57,6 +56,10 @@ abstract class MPFPayrollDateCalculatorBase implements MPFPayrollDateCalculatorE
 
     public LocalDate getEndOfEmployment() {
         return endOfEmployment;
+    }
+
+    public LocalDate getDeadlineFor30Exemption(){
+        return deadlineFor30Exemption;
     }
     
     /**
@@ -133,19 +136,6 @@ abstract class MPFPayrollDateCalculatorBase implements MPFPayrollDateCalculatorE
      */
     public void setAge65WithinPeriod(LocalDate periodStart, LocalDate periodEnd) {
         LocalDate age65Date = getThe65thAgeDate();
-        setAge65Within1stPeriod(dateUtils.isAgeWithinPeriod(age65Date, periodStart, periodEnd));
-    }
-
-    /**
-     * Calculate the deadline of enrollment for contribution
-     */
-    public LocalDate calDeadlineForEnrol() {
-        boolean isEighteenOrOlder = !dateOfBirth.isAfter(LocalDate.now().minusYears(18));
-        if (!isEighteenOrOlder) {
-            return dateUtils.getDateAfterPublicHolidayAndWeekend(
-                    dateUtils.getLargerDate(dateOfBirth.plusYears(18), getThe60thDOE())
-            );
-        }
-        return dateUtils.getDateAfterPublicHolidayAndWeekend(getThe60thDOE());
+        setAge65Within1stPeriod(dateUtils.isBetween(age65Date, periodStart, periodEnd));
     }
 }

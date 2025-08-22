@@ -55,7 +55,7 @@ public class MPFNonCalendarMonDateCalculator extends MPFPayrollDateCalculatorLog
             }
         }
 
-        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, deadlineForEnrol);
+        long totalDaysToDeadline = dateUtils.getDateCount(adjustedStart, getDeadlineFor30Exemption());
         LocalDate nextCycleStart = dateUtils.getDateAfter(1, getLastCycleDateForNonCal(adjustedStart, startDay + 1));
 
         // Set first period start date flag
@@ -75,7 +75,9 @@ public class MPFNonCalendarMonDateCalculator extends MPFPayrollDateCalculatorLog
 
             // record the extract periods data
             if (morePeriodIndex < breaker &&
-                    totalDays >= totalDaysToDeadline) {
+                    totalDays >= totalDaysToDeadline &&
+                    !dateUtils.isBetween(getDeadlineFor30Exemption(), period.getStartDate(), period.getEndDate())
+            ) {
                 morePeriods.add(period); // employee non-pay period
                 morePeriodIndex++;
             }else{

@@ -1,23 +1,17 @@
 package org.example.util.logic;
 
-import kotlin.Pair;
 import org.example.constant.MPFCalculatorConstants;
 import org.example.dto.ContributionPeriod;
 import org.example.dto.ContributionPeriodMore;
 import org.example.dto.MPFAmtResult;
 import org.example.enums.CalUserType;
 import org.example.enums.PayrollFrequency;
-import org.example.util.intf.MPFPayrollLogger;
 import org.example.util.intf.TriFunction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -245,7 +239,7 @@ public class MPFAmtCalculator {
         if (salary.compareTo(MPFCalculatorConstants.G_INT_MIN_DAY.multiply(diff)) < 0) { // salary < minimum_day * days_in_period
             return BigDecimal.ZERO;
         }else if (salary.compareTo(MPFCalculatorConstants.G_INT_MAX_DAY.multiply(diff)) > 0) { // salary > maximum_day * days_in_period
-            return MPFCalculatorConstants.G_INT_MAX_DAY.multiply(diff);
+            return MPFCalculatorConstants.G_INT_MAX_DAY.multiply(diff).multiply(MPFCalculatorConstants.FLOAT_RATIO);
         }
 
         return MPFCalculatorConstants.FLOAT_RATIO.multiply(salary);
