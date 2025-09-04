@@ -33,7 +33,7 @@ public class PeriodRectificationMiddleware implements ContributionPeriodMiddlewa
         if (endOfEmployment == null) {
             return contributionPeriod; // No rectification needed
         }
-        
+        //todo only deal PeriodMore, need deal Period?
         List<ContributionPeriod> morePeriods = contributionPeriod.getPeriodMore();
         if (morePeriods.isEmpty()) {
             return contributionPeriod;
@@ -56,7 +56,7 @@ public class PeriodRectificationMiddleware implements ContributionPeriodMiddlewa
         if (index < 0) {
             return periods;
         }
-        
+        //todo index >= periods.size() => false  ||  shouldTruncateAtIndex(period.getStartDate() < endOfEmployment < period.getEndDate())  need =
         if (index >= periods.size() || shouldTruncateAtIndex(periods, index)) {
             if (index >= 0) {
                 periods = periods.subList(0, index); // Cut periods after end of employment

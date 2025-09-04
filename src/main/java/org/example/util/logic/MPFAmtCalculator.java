@@ -182,7 +182,7 @@ public class MPFAmtCalculator {
      */
     private BigDecimal calMonthBase(BigDecimal salary) {
         if (salary.compareTo(MPFCalculatorConstants.G_INT_MIN_CALENDAR_MONTH) < 0) { // if month salary < min, no need to pay
-            return BigDecimal.ZERO;
+            return BigDecimal.ZERO;// //todo   employer should no need
         }else if (salary.compareTo(MPFCalculatorConstants.G_INT_MAX_CALENDAR_MONTH) > 0) { // if month salary > max, pay the max
             return MPFCalculatorConstants.G_INT_MAX_CALENDAR_MONTH.multiply(MPFCalculatorConstants.FLOAT_RATIO);
         }
